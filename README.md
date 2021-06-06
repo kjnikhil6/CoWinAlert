@@ -1,5 +1,5 @@
 # CoWInAlert
-This project checks 
+This project checks CoWIN vaccine 
 ## Link to product walkthrough
 [link to video]
 ## How it Works ?
