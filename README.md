@@ -1,18 +1,20 @@
 # CoWInAlert
-This project checks CoWIN vaccine 
-## Link to product walkthrough
-[link to video]
+Python Script that Notify(mail/SMS) You As Soon as COVID Vaccines (Covaxin, Covishield)Slots Open Up
+
+Using Selenium
 ## How it Works ?
-1. Explaining the working of project
-2. Embed video of project demo
+
+
 ## Libraries used
 
-pillow==8.0.1
+pillow,requests
 selenium
 python-dotenv
 ## How to configure
 
-
+1)assign pincode,email address..... etc variables in func.py
+2)run "_temp.py" to intialize 
 
 ## How to Run
 
+1)run "run.py"
