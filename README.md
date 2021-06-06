@@ -1,9 +1,10 @@
 # CoWInAlert
 Python Script that Notify(mail/SMS) You As Soon as COVID Vaccines (Covaxin, Covishield)Slots Open Up
 
-Using Selenium
-## How it Works ?
 
+## How it Works ?
+In the project selenium is used to scrape the CoWIN website(with given pincodes) and checks for vaccine slot.
+when a vaccine slot opensup SMS is send to given phone number
 
 ## Libraries used
 
