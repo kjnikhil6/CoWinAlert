@@ -8,8 +8,8 @@ when a vaccine slot opensup SMS is send to given phone number
 
 ## Libraries used
 
-pillow,requests
-selenium
+pillow,requests,
+selenium,
 python-dotenv
 ## How to configure
 
