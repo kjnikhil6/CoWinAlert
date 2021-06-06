@@ -13,8 +13,8 @@ selenium
 python-dotenv
 ## How to configure
 
-1)assign pincode,email address..... etc variables in func.py
-2)run "_temp.py" to intialize 
+1.assign pincode,email address..... etc variables in func.py
+2.run "_temp.py" to intialize and create neccessary files 
 
 ## How to Run
 
