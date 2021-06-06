@@ -1,92 +1,100 @@
-
-from flask import Flask
-
-from selenium.webdriver.chrome.options import Options
-
-from func import *
 import pickle
-from selenium import webdriver
-#from selenium.common.exceptions import TimeoutException
-
 import time
+from selenium.webdriver.chrome.options import Options
+from func import *
+from selenium import webdriver
 
 
 
+##############
+SearchByPin = '''//*[@id="mat-tab-label-0-1"]/div'''
+SearchText = '''//*[@id="mat-input-0"]'''
+Search = '''//*[@id="mat-tab-content-0-1"]/div/div[1]/div/div/button'''
 
-SearchByPin='''//*[@id="mat-tab-label-0-1"]/div'''
-SearchText='''//*[@id="mat-input-0"]'''
-Search='''//*[@id="mat-tab-content-0-1"]/div/div[1]/div/div/button'''
+TextAvailable1='''/html/body/app-root/div/app-home/div[3]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[2]/div[7]'''
+TextAvailable00 = '''/html/body/app-root/div/app-home/div[3]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[1]/div[4]/div/p'''
+TextAvailable01="/html/body/app-root/div/app-home/div[2]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[1]/div[4]/div/p"
+          
+NotAvailable1 = 'No Vaccination center is available for booking.'
+NotAvailable2="Currently there are no centers available for this day. Please check again in few hours."
+############333             
+def ComapareText(pincode, Content):
+    with open('data.pkl', 'r+b') as f:
+        myData = pickle.load(f)
+        f.seek(0)
+        Prev_Val = myData.get(pincode)
+        if Prev_Val:  #pincode exist
+            if Content == Prev_Val:
+                print('same preval')
+                return 0
+            else:  #change detected
+                myData[pincode] = Content
+                print(myData)
+                pickle.dump(myData, f)
+                return 1
+        else:  #make slot
+            myData[pincode] = Content
+            pickle.dump(myData, f)
+            print('myData')
+            return 0
 
-#TextAvailable2='''/html/body/app-root/div/app-home/div[3]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[1]/div[4]'''
-#TextAvailable1='''/html/body/app-root/div/app-home/div[3]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[1]/div[4]/div'''
-TextAvailable0='''/html/body/app-root/div/app-home/div[3]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[1]/div[4]/div/p'''
-NotAvailable='No Vaccination center is available for booking.'
 
-
-def ComapareText(pincode,Content):
-  with open('data.pkl','r+b') as f:
-    myData=pickle.load(f)
-    Prev_Val=myData.get(pincode)
-    if Prev_Val:#pincode exist
-      if Content == Prev_Val:
-        print('NOchange')
-        return 0
-      else:#change detected
-        myData[pincode]=Content
-        pickle.dump(myData, f)
-        return 1
-    else:#make slot 
-      myData[pincode]=Content
-      pickle.dump(myData, f)
-      return 0
 ################################
+
 
 chrome_options = Options()
 chrome_options.headless=True
 chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument("--disable-extensions")
+chrome_options.add_argument("--remote-debugging-port=9222")
+#chrome_options.add_argument("start-maximized")
 chrome_options.add_argument('--disable-dev-shm-usage')
-browser = webdriver.Chrome(options=chrome_options)
-
-
-app = Flask('app')
-
-@app.route('/')
-def hello_world():
+browser = webdriver.Chrome('/home/fl/Downloads/chromedriver',options=chrome_options)
+browser.set_window_size(1200,600)
+try:
+  browser.set_page_load_timeout(60)
   browser.get('https://www.cowin.gov.in')
-  Click(SearchByPin,browser)
-  time.sleep(1)
-  for pincode in PINCODES.split(","):
-
-    print(pincode)
-    
-    Type(SearchText,browser,value=pincode)
-    print(2)
-    Click(Search,browser)
-    time.sleep(1)
-    print(3)
-    Content=ContentText(TextAvailable0,browser)
-    print(Content)
-    change=ComapareText(pincode,Content)
-    print(change)
-    if change:
-      if Content!=NotAvailable:
-        status=SMS()
-        #SendMail()
-        print(status)                                 
-    # else:#print no change
-    #   #staus=SMS(msg="no cahnge mwone")
-    #   print(staus)
+  Click(SearchByPin, browser)
+except:
   browser.quit()
-  with open('counter.pkl','rb') as f:
-    count=pickle.load(f)
-  print(count)
-  with open('counter.pkl', 'wb') as f:
-    count+=1
-    pickle.dump(count, f)
+  print("page not get")
 
-    return str(count)
-if __name__ == '__main__':
-  app.run(host='0.0.0.0', port=8080)
+time.sleep(1)
+print('starting')
+for pincode in PINCODES.split(","):
+
+  try:
+    Type(SearchText, browser, value=pincode)
+    Click(Search, browser)
+    time.sleep(1)
+    print('getting content')
+    Content = ContentText(TextAvailable00,TextAvailable01,TextAvailable1, browser)
+    print(Content)
+    if Content==0:
+    	continue   # error
+    change = ComapareText(str(pincode), Content)
+    print('changed',change)
+    if change:
+      if Content != NotAvailable1 and Content != NotAvailable2 :
+        status = SMS()
+                #SendMail()
+        print(status)
+        # else:#print no change
+        #   #staus=SMS(msg="no cahnge mwone")
+        #   print(staus)
+  except Exception as e:
+    browser.quit()
+    print(e)
+browser.quit()
+with open('counter.pkl', 'rb') as f:
+  count = pickle.load(f)
+with open('counter.pkl', 'wb') as f:
+  count += 1
+  pickle.dump(count, f)
+  print('run:',count)
+if count%25 ==0:
+  _= SendMail(msg='Program is Running')
 
 # mydata={'678601':'No Vaccination center is available for booking.'}
 # with open('data.pkl', 'wb') as f:
