@@ -20,7 +20,7 @@ RECEIVER_MAIL=os.getenv('RECEIVR_mailid_1')
 RECEIVER_NOS=os.getenv('RECEIVR_NOS')#add more by seperating with comma
 FAST2SMS_AUTH=os.getenv('FAST2SMS_AUTH')
 
-def SendMail(msg="Sitil keri nokk kutta"):
+def SendMail(msg="Time to book for Vaccine"):
     port = 587#465  # For SSL
     smtp_server = "smtp.gmail.com"
     sender_email = EMAIL_ID  # Enter your address
@@ -44,7 +44,7 @@ def SendMail(msg="Sitil keri nokk kutta"):
 
 
 
-def SMS(msg="Sitil keri nokk kutta"):
+def SMS(msg="Time to book for Vaccine"):
         url = "https://www.fast2sms.com/dev/bulk"
         my_data = {
      # Your default Sender ID
