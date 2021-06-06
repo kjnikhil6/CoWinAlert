@@ -1,4 +1,4 @@
-# CoWInAlert
+# CoWINAlert
 Python Script that Notify(mail/SMS) You As Soon as COVID Vaccines (Covaxin, Covishield)Slots Open Up
 
 
