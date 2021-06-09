@@ -1,106 +1,81 @@
 import pickle
 import time
 from selenium.webdriver.chrome.options import Options
-from func import *
 from selenium import webdriver
+import pytz
+from datetime import datetime as dt, timedelta
 
-
-
+IST=pytz.timezone('Asia/Kolkata')
 ##############
-SearchByPin = '''//*[@id="mat-tab-label-0-1"]/div'''
-SearchText = '''//*[@id="mat-input-0"]'''
-Search = '''//*[@id="mat-tab-content-0-1"]/div/div[1]/div/div/button'''
-
-TextAvailable1='''/html/body/app-root/div/app-home/div[3]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[2]/div[7]'''
-TextAvailable00 = '''/html/body/app-root/div/app-home/div[3]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[1]/div[4]/div/p'''
-TextAvailable01="/html/body/app-root/div/app-home/div[2]/div/appointment-table/div/div/div/div/div/div/div/div/div/div/div[2]/form/div/div/div[1]/div[4]/div/p"
           
-NotAvailable1 = 'No Vaccination center is available for booking.'
-NotAvailable2="Currently there are no centers available for this day. Please check again in few hours."
-############333             
-def ComapareText(pincode, Content):
-    with open('data.pkl', 'r+b') as f:
-        myData = pickle.load(f)
-        f.seek(0)
-        Prev_Val = myData.get(pincode)
-        if Prev_Val:  #pincode exist
-            if Content == Prev_Val:
-                print('same preval')
-                return 0
-            else:  #change detected
-                myData[pincode] = Content
-                print(myData)
-                pickle.dump(myData, f)
-                return 1
-        else:  #make slot
-            myData[pincode] = Content
-            pickle.dump(myData, f)
-            print('myData')
-            return 0
+
+from func import *		
+
 
 
 ################################
 
 
-chrome_options = Options()
-chrome_options.headless=True
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-gpu')
-chrome_options.add_argument("--disable-extensions")
-chrome_options.add_argument("--remote-debugging-port=9222")
-#chrome_options.add_argument("start-maximized")
-chrome_options.add_argument('--disable-dev-shm-usage')
-#browser = webdriver.Chrome('/home/chromedriver',options=chrome_options)
-browser = webdriver.Chrome(options=chrome_options)
-browser.set_window_size(1200,600)
-try:
-  browser.set_page_load_timeout(60)
-  browser.get('https://www.cowin.gov.in')
-  Click(SearchByPin, browser)
-except:
-  browser.quit()
-  print("page not get")
 
-time.sleep(1)
-print('starting')
-for pincode in PINCODES.split(","):
 
-  try:
-    Type(SearchText, browser, value=pincode)
-    Click(Search, browser)
-    time.sleep(1)
-    print('getting content')
-    Content = ContentText(TextAvailable00,TextAvailable01,TextAvailable1, browser)
-    print(Content)
-    if Content==0:
-    	continue   # error
-    change = ComapareText(str(pincode), Content)
-    print('changed',change)
-    if change:
-      if Content != NotAvailable1 and Content != NotAvailable2 :
-        status = SMS()
-                #SendMail()
-        print(status)
-        # else:#print no change
-        #   #staus=SMS(msg="no cahnge mwone")
-        #   print(staus)
-  except Exception as e:
-    browser.quit()
-    print(e)
-browser.quit()
-with open('counter.pkl', 'rb') as f:
-  count = pickle.load(f)
-with open('counter.pkl', 'wb') as f:
-  count += 1
-  pickle.dump(count, f)
-  print('run:',count)
-if count%25 ==0:
-  _= SendMail(msg='Program is Running')
-
-# mydata={'678601':'No Vaccination center is available for booking.'}
-# with open('data.pkl', 'wb') as f:
-#   pickle.dump(mydata, f)
-#count=0
-
-# with open('counter.pkl', 'wb') as f:
-#   pickle.dump(count, f)
+def scheduleAlert():
+	chrome_options = Options()
+	#chrome_options.headless=True
+	chrome_options.add_argument('--no-sandbox')
+	chrome_options.add_argument('--disable-gpu')
+	chrome_options.add_argument("--disable-extensions")
+	chrome_options.add_argument("--remote-debugging-port=9222")
+	#chrome_options.add_argument("start-maximized")
+	chrome_options.add_argument('--disable-dev-shm-usage')
+	browser = webdriver.Chrome(options=chrome_options)
+	browser.set_window_size(1200,600)
+	try:
+		browser.set_page_load_timeout(60)
+		browser.get('https://www.cowin.gov.in')
+		Click(SearchByPin, browser)
+	except:
+		browser.quit()
+		print("page not loading")
+	time.sleep(1)
+	print('starting')
+	try:
+		for pincode in PINCODES.split(","):
+			Type(SearchText, browser, value=pincode)
+			Click(Search, browser)
+			time.sleep(10)
+			print('getting content')
+			CONTENTS= ContentText(TextAvailable00,TextAvailable01,TextAvailable1, browser)
+			if not  CONTENTS:
+				continue #no slots available msg
+			for content in CONTENTS:#loc,dates_slot
+		
+				LOC_NAME   = content.find_element_by_xpath(location).get_attribute('textContent').upper()
+				DATE_SLOTS = content.find_elements_by_xpath(slots)#li
+		
+				for dateC,date_SLOT in enumerate(DATE_SLOTS):
+		
+					VacAge_TYPES=date_SLOT.find_elements_by_xpath('./div')
+					if 'NA' in date_SLOT.get_attribute('textContent'):
+						print('NA')
+						continue
+					DATE       = (dt.now(IST)+timedelta(days=dateC)).strftime('%d %b')
+					for VacAge_TYPE in VacAge_TYPES:#diff vaccine fiff age group
+						BOOKED=check_BOOKED(VacAge_TYPE)
+						if not BOOKED:
+							D1       = VacAge_TYPE.find_element_by_xpath('./div/div[1]/span[1]').get_attribute('textContent').split(' ')[1]
+							D2       = VacAge_TYPE.find_element_by_xpath('./div/div[1]/span[2]').get_attribute('textContent').split(' ')[1]
+							VaccNAME = VacAge_TYPE.find_element_by_xpath('./div/div[2]').get_attribute('textContent').upper()
+							AgeGroup = VacAge_TYPE.find_element_by_xpath('./div/div[3]').get_attribute('textContent').upper()
+							
+							mailSend=check_MailSent(pincode,LOC_NAME,DATE,VaccNAME,AgeGroup,D1,D2)
+							if not mailSend:
+								SendMail(msg=f"PIN:{pincode}\n{LOC_NAME}\n{DATE}\n{VaccNAME}:{AgeGroup} D1:{D1} D2:{D2}")
+	except:
+		browser.quit()
+	browser.quit()
+while True:
+	scheduleAlert()
+	time.sleep(10)
+	with open('data.pkl', 'rb') as f:
+		myData=pickle.load(f)
+		print(myData)
