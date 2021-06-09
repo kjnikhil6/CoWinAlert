@@ -10,7 +10,7 @@ when a vaccine slot opensup SMS is send to given phone number
 
 pillow,requests,
 selenium,
-python-dotenv
+pytz
 ## How to configure
 
 1.assign pincode,email address..... etc variables in func.py
@@ -18,4 +18,4 @@ python-dotenv
 
 ## How to Run
 
-1)run "run.py"
+1)run "main.py"
